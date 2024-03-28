@@ -2,7 +2,6 @@
 import asyncio
 
 import discord
-from discord.ext import commands
 import os
 import yaml
 
@@ -15,8 +14,8 @@ intents.guild_messages = True  # Allows the bot to see messages in guilds
 intents.dm_messages = True  # Allows the bot to direct message guild members
 intents.message_content = True  # Allows the bot to view message content
 
-# Bot object creation with command prefix '!' and the intents set
-bot = commands.Bot(command_prefix='!', intents=intents)
+# Bot object creation intents
+bot = discord.Client(intents=intents)
 
 
 @bot.event
@@ -25,7 +24,7 @@ async def on_message(message):  # on message event
     message.content = message.content.lower()  # convert the message to lowercase
     if message.author == bot.user or message.channel.type == discord.ChannelType.private:  # ignore messages from bots and in dms
         return
-    if message.content.startswith(f'!{state.get_command().lower()}'):  # check if the message is the configured command
+    if message.content.startswith(f'{state.get_prefix()}{state.get_command().lower()}'):  # check if the message is the configured command
         await message.delete()  # delete the message for privacy
         if user not in state.get_currently_reporting():  # check if the user is not already reporting
             # send a message to the channel
@@ -44,18 +43,18 @@ async def wait_for_message(user):
         message = await bot.wait_for('message', timeout=3600, check=lambda
             message: message.author == user and message.channel.type == discord.ChannelType.private)
         sanitize_input(message.content)  # sanitize the input to prevent code injection
-        if message.attachments != []: # check if the message has attachments
-            await user.send(f'Attachments are not supported because of bandwidth issues. If you want to send an attachment, please create a new report with !{state.get_command()} and provide a link to the attachment.')
+        if message.attachments: # check if the message has attachments
+            await user.send(f'Attachments are not supported because of bandwidth issues. If you want to send an attachment, please create a new report with {state.get_prefix()}{state.get_command()} and provide a link to the attachment.')
             return None
     except asyncio.TimeoutError:
-        await user.send(f'You took too long to respond. Please create a new report with !{state.get_command()}.')
+        await user.send(f'You took too long to respond. Please create a new report with {state.get_prefix()}{state.get_command()}.')
         return None
     except Exception as e:
-        await user.send(f'An error occurred. Please create a new report with !{state.get_command()}.')
+        await user.send(f'An error occurred. Please create a new report with {state.get_prefix()}{state.get_command()}.')
         print(e)
         return None
     if message.content.upper() == 'EXIT':
-        await user.send(f'Report cancelled. Please create a new report with !{state.get_command()}.')
+        await user.send(f'Report cancelled. Please create a new report with {state.get_prefix()}{state.get_command()}.')
         return None
     return message
 
@@ -92,14 +91,18 @@ async def dm_start(user):
     return
 
 
-# Class to store global variables
+# This class stores the variables the must be shared between multiple functions
+# I'm doing this to avoid using global variables
 class bot_state:
     def __init__(self):
-        self.reportChannel = 0
+        # initialize the class variables to default values
+        self.command = 'report'
+        self.prefix = '!'
+        self.messageTimeout = 3600
+        self.reportChannel = 818260076291817521
         self.currently_reporting = []
         self.messages_list = []
-        self.command = 'report'
-        self.role_id = 0
+        self.role_id = 818260076291817517
 
     # Currently reporting list operations:
     def add_to_currently_reporting(self, user: discord.user):  # add user to currently_reporting list
@@ -145,8 +148,24 @@ class bot_state:
     def get_alert_role_id(self):
         return self.role_id
 
+    # prefix operations:
+    def set_prefix(self, prefix: str):
+        self.prefix = prefix
+        return
 
-# DO NOT CHANGE, THIS IS USED TO LOAD THE CONFIG FILE CHANGE THE VALUES IN THE CONFIG NOT HERE
+    def get_prefix(self):
+        return self.prefix
+
+    # message timeout operations:
+    def set_messageTimeout(self, messageTimeout: int):
+        self.messageTimeout = messageTimeout
+        return
+
+    def get_messageTimeout(self):
+        return self.messageTimeout
+
+# This function loads the config from the config.yaml file
+# if the file is not found or there is an error loading the file, the bot will exit
 async def load_config():  # load config function
     global state
     try:
@@ -154,24 +173,38 @@ async def load_config():  # load config function
             try:
                 data = yaml.safe_load(f)  # load the yaml file
                 try:
+
+                    state.set_prefix(data['prefix'])  # get the prefix from the config
                     state.set_command(data['command'])  # get the command from the config
-                    state.set_reportChannel(data['reportChannel'])  # get the reportChannel from the config
-                    # get the role_id of the role that will be mentioned in the notification
-                    state.set_alert_role_id(data['role_id'])
+                    state.set_messageTimeout(data['messageTimeout'])  # get the messageTimeout from the config
+                    print(data['reportChannel'])
+                    print(data['role_id'])
+                    if 'reportChannel' in data and data['reportChannel'] != 0:
+                        state.set_reportChannel(data['reportChannel'])  # get the reportChannel from the config
+                    else:
+                        print("reportChannel not configured in config.yaml, using value that you definitely don't intend to, so that the bot doesn't break and you dont blame me.")
+                    if 'role_id' in data and data['role_id'] != 0:
+                        # get the role_id of the role that will be mentioned in the notification
+                        state.set_alert_role_id(data['role_id'])
+                    else:
+                        print("role_id not configured in config.yaml, using value that you definitely don't intend to, so that the bot doesn't break and you dont blame me.")
                     # loop all messages get all messages from the config
                     messages = data['messages']
-                    for key, value in messages.items():
+                    for key, value in messages.items():  # loop through the messages
                         state.add_messages_list(value)  # add the message to the messages list
-                        print(f'{key}: {value}')
+                        # print(f'{key}: {value}')
+                    return
                 except KeyError as e:
                     print(e)
-                    exit()  # abort boot because vital config is missing
+                    print("config.yaml is missing a key, using its default value.")
+                    return
             except yaml.YAMLError as e:
                 print(e)  # print YAMLError if there is an error
-                exit()  # abort boot because yaml error
+                return
     except FileNotFoundError as e:  # catch any other exceptions
         print(e)  # print the exception
-        exit()  # abort boot because of the exception
+        print("config.yaml not found, using default values.")
+        return
 
 
 @bot.event
@@ -185,7 +218,7 @@ async def on_ready():  # bot starting up logic
     print('Ready for reports')
     print('----------------------')
     # set the bot's status
-    await bot.change_presence(activity=discord.Game(name=f'Report with !{state.get_command()}'))
+    await bot.change_presence(activity=discord.Game(name=f'Report with {state.get_prefix()}{state.get_command()}'))
 
 
 # get the bot token from the environment variable DISCORD_BOT_TOKEN and exit if it is not set

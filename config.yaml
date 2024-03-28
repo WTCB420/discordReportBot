@@ -1,6 +1,8 @@
+prefix: "!"
 command: "report"
-reportChannel: 818260076291817521
-role_id: 818260076291817517
+reportChannel: 0
+role_id: 0
+messageTimeout: 3600
 messages:
   username: "What is the username of the person who you are reporting?"
   issueMessage: "Being as detailed as possible, what issue are you facing?"
