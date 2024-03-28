@@ -22,9 +22,10 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 @bot.event
 async def on_message(message):  # on message event
     user = message.author  # get the user who sent the message
-    if message.author == bot.user or message.channel.type == discord.ChannelType.private:  # ignore messages from bots
+    message.content = message.content.lower()  # convert the message to lowercase
+    if message.author == bot.user or message.channel.type == discord.ChannelType.private:  # ignore messages from bots and in dms
         return
-    if message.content.startswith(f'!{state.get_command()}'):  # check if the message is the configured command
+    if message.content.startswith(f'!{state.get_command().lower()}'):  # check if the message is the configured command
         await message.delete()  # delete the message for privacy
         if user not in state.get_currently_reporting():  # check if the user is not already reporting
             # send a message to the channel
@@ -42,18 +43,26 @@ async def wait_for_message(user):
         # wait for the user to respond in dms
         message = await bot.wait_for('message', timeout=3600, check=lambda
             message: message.author == user and message.channel.type == discord.ChannelType.private)
+        sanitize_input(message.content)  # sanitize the input to prevent code injection
+        if message.attachments != []: # check if the message has attachments
+            await user.send(f'Attachments are not supported because of bandwidth issues. If you want to send an attachment, please create a new report with !{state.get_command()} and provide a link to the attachment.')
+            return None
     except asyncio.TimeoutError:
-        await user.send('You took too long to respond. Please create a new report with !report.')
+        await user.send(f'You took too long to respond. Please create a new report with !{state.get_command()}.')
         return None
     except Exception as e:
-        await user.send('An error occurred. Please create a new report with !report.')
+        await user.send(f'An error occurred. Please create a new report with !{state.get_command()}.')
         print(e)
         return None
     if message.content.upper() == 'EXIT':
-        await user.send('Report cancelled. Please create a new report with !report.')
+        await user.send(f'Report cancelled. Please create a new report with !{state.get_command()}.')
         return None
     return message
 
+
+# Sanitize the input to prevent code injection
+def sanitize_input(data):
+    return data.replace('`', '').replace('*', '').replace('_', '').replace('~', '').replace('@', '')
 
 # Initiates the dm with the user
 async def dm_start(user):
@@ -66,6 +75,7 @@ async def dm_start(user):
         await user.send(message)  # send the message to the user
         response = await wait_for_message(user)  # wait for the user to respond
         if response is None:  # if the user took too long to respond or cancelled the report
+            state.remove_from_currently_reporting(user)  # remove the user from the currently_reporting list
             return
         responses.append(response)  # add the response to the responses list
     state.remove_from_currently_reporting(user)  # remove the user from the currently_reporting list, so they can
@@ -175,7 +185,7 @@ async def on_ready():  # bot starting up logic
     print('Ready for reports')
     print('----------------------')
     # set the bot's status
-    await bot.change_presence(activity=discord.Game(name='Report with !report'))
+    await bot.change_presence(activity=discord.Game(name=f'Report with !{state.get_command()}'))
 
 
 # get the bot token from the environment variable DISCORD_BOT_TOKEN and exit if it is not set
