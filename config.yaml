@@ -1,0 +1,8 @@
+command: "report"
+reportChannel: 818260076291817521
+role_id: 818260076291817517
+messages:
+  username: "What is the username of the person who you are reporting?"
+  issueMessage: "Being as detailed as possible, what issue are you facing?"
+  userSolvedStateMessage: "How would you like the issue to be resolved?"
+  reachOutMessage: "Would you like us to contact you for further information?"
