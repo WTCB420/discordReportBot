@@ -1,6 +1,5 @@
 # simple discord bot to manage user reporting on a discord server
 import asyncio
-
 import discord
 import os
 import yaml
@@ -17,12 +16,14 @@ intents.message_content = True  # Allows the bot to view message content
 # Bot object creation intents
 bot = discord.Client(intents=intents)
 
-
+# handles messages and checks if the message is the command
+# I know that doesn't use discord's command registering feature, but I'm too lazy
+# to learn how to use it, so I'm doing it this way
 @bot.event
 async def on_message(message):  # on message event
     user = message.author  # get the user who sent the message
     message.content = message.content.lower()  # convert the message to lowercase
-    if message.author == bot.user or message.channel.type == discord.ChannelType.private:  # ignore messages from bots and in dms
+    if message.author == bot.user or message.channel.type == discord.ChannelType.private or message.channel.id != state.get_commandChannel():  # ignore messages from bots and in dms and in the wrong channel
         return
     if message.content.startswith(f'{state.get_prefix()}{state.get_command().lower()}'):  # check if the message is the configured command
         await message.delete()  # delete the message for privacy
@@ -36,13 +37,13 @@ async def on_message(message):  # on message event
             await message.channel.send(f'You already have an active report.')
             return
 
-
+# This function handles the messages with the report filer
 async def wait_for_message(user):
     try:
         # wait for the user to respond in dms
         message = await bot.wait_for('message', timeout=3600, check=lambda
             message: message.author == user and message.channel.type == discord.ChannelType.private)
-        sanitize_input(message.content)  # sanitize the input to prevent code injection
+        sanitize_input(message.content)  # sanitize the input to prevent code injection, or at least try to
         if message.attachments: # check if the message has attachments
             await user.send(f'Attachments are not supported because of bandwidth issues. If you want to send an attachment, please create a new report with {state.get_prefix()}{state.get_command()} and provide a link to the attachment.')
             return None
@@ -60,6 +61,9 @@ async def wait_for_message(user):
 
 
 # Sanitize the input to prevent code injection
+# I know that this is not the best way to do it, but I kinda want to
+# keep the bot simple, and it would be hilarious if someone tried to
+# inject code into this shit ass bot
 def sanitize_input(data):
     return data.replace('`', '').replace('*', '').replace('_', '').replace('~', '').replace('@', '')
 
@@ -92,7 +96,7 @@ async def dm_start(user):
 
 
 # This class stores the variables the must be shared between multiple functions
-# I'm doing this to avoid using global variables
+# I'm doing this to avoid using global variables because AI told me to
 class bot_state:
     def __init__(self):
         # initialize the class variables to default values
@@ -100,6 +104,7 @@ class bot_state:
         self.prefix = '!'
         self.messageTimeout = 3600
         self.reportChannel = 818260076291817521
+        self.commandChannel = 818260076669566984
         self.currently_reporting = []
         self.messages_list = []
         self.role_id = 818260076291817517
@@ -164,8 +169,20 @@ class bot_state:
     def get_messageTimeout(self):
         return self.messageTimeout
 
+    # commandChannel operations:
+    def set_commandChannel(self, commandChannel: int):
+        self.commandChannel = commandChannel
+        return
+
+    def get_commandChannel(self):
+        return self.commandChannel
+
 # This function loads the config from the config.yaml file
-# if the file is not found or there is an error loading the file, the bot will exit
+# if the file is not found or there is an error loading the file, the bot use default values
+# also I know that this function is a mess and doesn't really account for a missing config file, but
+# honestly I don't care, because I'm gonna be the only one using this bot.
+# And you may be thinking, "I'm not you and I'm using this bot", and if that's the case, I'm sorry that
+# life has brought you to this point, and I hope that things get better for you soon.
 async def load_config():  # load config function
     global state
     try:
@@ -173,12 +190,13 @@ async def load_config():  # load config function
             try:
                 data = yaml.safe_load(f)  # load the yaml file
                 try:
-
                     state.set_prefix(data['prefix'])  # get the prefix from the config
                     state.set_command(data['command'])  # get the command from the config
                     state.set_messageTimeout(data['messageTimeout'])  # get the messageTimeout from the config
-                    print(data['reportChannel'])
-                    print(data['role_id'])
+                    if 'commandChannel' in data and data['commandChannel'] != 0:
+                        state.set_commandChannel(data['commandChannel'])
+                    else:
+                        print("commandChannel not configured in config.yaml, using value that you definitely don't intend to, so that the bot doesn't break and you dont blame me.")
                     if 'reportChannel' in data and data['reportChannel'] != 0:
                         state.set_reportChannel(data['reportChannel'])  # get the reportChannel from the config
                     else:
@@ -206,7 +224,7 @@ async def load_config():  # load config function
         print("config.yaml not found, using default values.")
         return
 
-
+# Bot ready up handler
 @bot.event
 async def on_ready():  # bot starting up logic
     print('----------------------')
@@ -222,6 +240,10 @@ async def on_ready():  # bot starting up logic
 
 
 # get the bot token from the environment variable DISCORD_BOT_TOKEN and exit if it is not set
+# please for the love of god, don't hardcode the token
+# if you do that, you are a bad person
+# Also please pray for me, because I'm also a bad person and probably hardcoded the token
+# somewhere that I forgot about, so here's hoping that whoever finds it is a good person
 if os.getenv('DISCORD_BOT_TOKEN') is None:
     print("DISCORD_BOT_TOKEN is not set")
     print("Please set the DISCORD_BOT_TOKEN environment variable")

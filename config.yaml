@@ -1,5 +1,6 @@
 prefix: "!"
 command: "report"
+commandChannel: 0
 reportChannel: 0
 role_id: 0
 messageTimeout: 3600
