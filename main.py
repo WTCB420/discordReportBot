@@ -77,9 +77,25 @@ async def on_ready():  # bot starting up logic
 try:
     load_dotenv()
     DISCORD_BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
-except KeyError:
-    print("DISCORD_BOT_TOKEN is not set")
-    print("Please set the DISCORD_BOT_TOKEN environment variable")
+except FileNotFoundError:
+    print(".env file not found")
+    print("Please create the .env file with the DISCORD_BOT_TOKEN environment variable")
+    exit(1)
+try:
+    bot.run(DISCORD_BOT_TOKEN)  # run the bot
+except discord.LoginFailure:
+    print("Invalid token")
+    exit(1)
+except discord.HTTPException:
+    print("An HTTP error occurred")
+    exit(1)
+except discord.ConnectionClosed:
+    print("Connection to discord closed")
+    exit(1)
+except discord.GatewayNotFound:
+    print("Gateway not found")
+    exit(1)
+except TypeError:
+    print("DISCORD_BOT_TOKEN is not set in the .env file")
     exit(1)
 
-bot.run(DISCORD_BOT_TOKEN)  # run the bot
