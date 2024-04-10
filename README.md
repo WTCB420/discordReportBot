@@ -12,7 +12,7 @@ You'll need to generate a link to invite the bot to a guild (server). For this, 
 ![firefox_VqgEdnUTdl](https://github.com/WTCB420/discordReportBot/assets/36096475/d07b386a-41c3-4cd9-963a-50d655743dec)
 ![firefox_DulRGZzQ69](https://github.com/WTCB420/discordReportBot/assets/36096475/3b10283a-574c-4136-863d-27a0123f8a05)
 
-### Note: You will need to manually give the bot permissions to the channels you want it to look for the command in and where you want it to output the completed reports.
+### Note: You will need to manually give the bot permissions to the channels you want it to look for the command in and where you want it to output the completed reports. It also needs permissions to send notification to the role you wish. 
 
 # Install
 - ## Get programs
