@@ -9,13 +9,11 @@ You'll need to enable both "Server Members Intent" and "Message Content Intent" 
 Don't forget to save your changes!
 - ## Invite the bot to your server
 You'll need to generate a link to invite the bot to a guild (server). For this, I would recommend following the tutorial and being absolutely certain that the bot doesn't have more permissions than it needs. This is to prevent someone from stealing your bot key and using it to destroy your server. With that said, the bot needs the following permissions:
-- Bot
-- Messages
-- guilds
-- members
-- guild.members
-- dm_messages
-- message_content
+![firefox_VqgEdnUTdl](https://github.com/WTCB420/discordReportBot/assets/36096475/d07b386a-41c3-4cd9-963a-50d655743dec)
+![firefox_DulRGZzQ69](https://github.com/WTCB420/discordReportBot/assets/36096475/3b10283a-574c-4136-863d-27a0123f8a05)
+
+### Note: You will need to manually give the bot permissions to the channels you want it to look for the command in and where you want it to output the completed reports.
+
 # Install
 - ## Get programs
 -Ubuntu/Debian
