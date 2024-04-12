@@ -74,6 +74,40 @@ This key defines what word following the prefix will trigger the bot's logic. E.
 ```
 command: "report"
 ```
-This key defines where the bot should listen for the command. This needs to be a number (integer). E.g., 800836208007446528 goes to #bot-stuff. Leaving this at zero will use default values and may break the bot.
+This key defines where the bot should listen for the command. This needs to be a number (integer). E.g., 800836208007446528 could point to #bot-stuff. Leaving this at zero will use default values and may break the bot.
 ### Note: You can find the ID of the channels or groups with [this](https://docs.statbot.net/docs/faq/general/how-find-id/) tutorial.
+```
+commandChannel: 0
+```
+This key defines where the bot should post the information provided in a completed report. This needs to be a number (integer). E.g. 818260076291817521 could point to #completed-reports.  Leaving this at zero will use default values and may break the bot.
+```
+reportChannel: 0
+```
+This key handles what role the bot should mention when a report is completed. E.g. 1227702564880126114 could be for @admin. Leaving at 0 will disable mentions.
+```
+role_id: 0
+```
+This is the amount of time, in seconds, the bot should wait before ending an inactive report instance. 3600 seconds = 1 hour 
+```
+messageTimeout: 3600
+```
+This section contains the messages that will be sent to the person who opens a report. It will send all the messages under the 'messages' parent key, no matter their key (as long as they follow json syntax and have a unique key).
+```
+messages:
+  username: "What is the username of the person who you are reporting?"
+  issueMessage: "Being as detailed as possible, what issue are you facing?"
+  userSolvedStateMessage: "How would you like the issue to be resolved?"
+  reachOutMessage: "Would you like us to contact you for further information?"
+```
+If you wanted, for example, to add an option to ask the user what rule they think the offender broke, you could add the following.
+```
+messages:
+  username: "What is the username of the person who you are reporting?"
+  issueMessage: "Being as detailed as possible, what issue are you facing?"
+  ruleBrokenMessage: "What rule do you think they broke?"
+  userSolvedStateMessage: "How would you like the issue to be resolved?"
+  reachOutMessage: "Would you like us to contact you for further information?"
+```
+
+
 And that about wraps up everything to configure. If you have any questions, feel free to reach out, bearing in mind that I'm not a professional dev and this is a free bot. 
