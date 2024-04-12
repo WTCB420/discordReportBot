@@ -9,9 +9,9 @@ async def wait_for_message(user, bot, state, prefix):
         message = await bot.wait_for('message', timeout=3600, check=lambda
             message: message.author == user and message.channel.type == discord.ChannelType.private)
         sanitize_input(message.content)  # sanitize the input to prevent code injection, or at least try to
-        if message.attachments: # check if the message has attachments
-            await user.send(f'Attachments are not supported because of bandwidth issues. If you want to send an attachment, please create a new report with {prefix}{state.get_command()} and provide a link to the attachment.')
-            return None
+        if message.attachments:  # check if the message has attachments
+            attachment_urls = [attachment.url for attachment in message.attachments]  # get the urls of the attachments
+            message.content += '\n'.join(attachment_urls)  # add the urls to the message content
     except asyncio.TimeoutError:
         await user.send(f'You took too long to respond. Please create a new report with {prefix}{state.get_command()}.')
         return None
@@ -48,7 +48,8 @@ async def dm_start(user, bot, state, prefix):
     # populate reporter information
     for message, response in zip(state.get_messages_list(), responses):  # loop through the messages and responses
         alert.append(f'{message}: {response.content}')  # add the message and response to the alert
-    alert.append(f'<@&{state.get_alert_role_id()}>')  # Add the mention role from the config
+    if state.get_alert_role_id() != 0:
+        alert.append(f'<@&{state.get_alert_role_id()}>')  # Add the mention role from the config
     await channel.send('\n'.join(alert))  # send the alert to the report channel
     return
 

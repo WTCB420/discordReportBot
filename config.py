@@ -30,7 +30,8 @@ async def load():  # load config function
                         # get the role_id of the role that will be mentioned in the notification
                         state.set_alert_role_id(data['role_id'])
                     else:
-                        print("role_id not configured in config.yaml, using value that you definitely don't intend to, so that the bot doesn't break and you dont blame me.")
+                        print("role_id is 0 in the config.yaml, it will not mention a role in the notification.")
+                        state.set_alert_role_id(data['role_id'])
                     # loop all messages get all messages from the config
                     messages = data['messages']
                     for key, value in messages.items():  # loop through the messages
@@ -61,7 +62,7 @@ class bot_state:
         self.commandChannel = 818260076669566984
         self.currently_reporting = []
         self.messages_list = []
-        self.role_id = 818260076291817517
+        self.role_id = 0
         self.prefix = '!'
 
     # Currently reporting list operations:
