@@ -1,5 +1,13 @@
 # discordReportBot
 This is a very shitty report bot that I threw together in a couple of days of my free time. Please don't actually use this. It's for a Discord server that is big enough to have a report bot because we outgrew Google Forms, but is not nearly big enough to invest the time or money into making a fully featured bot that isn't a mess. Anyone's free to use it because I really don't give a fuck, but please don't message me when it breaks. I'll probably update it for our needs.
+
+# Roadmap:
+- [x] Attachment support
+- [ ] Toggles for enabling attachments, dedicated report channel, and other things
+- [ ] Toggle attachment support on a question by question basis
+- [ ] Run checks on attachments 
+- [ ] Put all sent messages in config.yaml
+
 # Prerequisite stuff
 - ## Create Discord Application
 I don't really want to host this for more people than me, so you'll need to create your own Discord application and use this python app to run it.
