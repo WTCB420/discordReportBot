@@ -50,7 +50,21 @@ async def dm_start(user, bot, state, prefix):
         alert.append(f'{message}: {response.content}')  # add the message and response to the alert
     if state.get_alert_role_id() != 0:
         alert.append(f'<@&{state.get_alert_role_id()}>')  # Add the mention role from the config
-    await channel.send('\n'.join(alert))  # send the alert to the report channel
+
+    if len('\n'.join(alert)) > 2000:     # check if the message is too long
+        for message in alert:
+            if len(message) > 2000: # check if individual like is too long
+                for i in range(0, len(message), 2000):
+                    await channel.send(message[i:i + 2000]) # send the alert to the report channel per 2000 character section
+                    # note that this will split the message in the middle of a line which is not ideal and might break links,
+                    # but it's better than not sending the message at all and giving the admins an error in the console
+                    # This should be fixed in the future
+            else:
+                await channel.send(message)  # send the alert to the report channel per line
+
+
+    else:
+        await channel.send('\n'.join(alert))  # send the alert to the report channel
     return
 
 
